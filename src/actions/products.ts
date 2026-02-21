@@ -37,7 +37,7 @@ export async function addProduct(formData: FormData) {
       name:      formData.get('name') as string,
       sku:       formData.get('sku') as string || null,
       own_price: Number(formData.get('own_price')) || null,
-      currency:  (formData.get('currency') as string) || 'USD',
+      currency:  (formData.get('currency') as 'USD' | 'EUR' | 'GBP' | 'CAD' | 'AUD' | 'HUF') || 'HUF',
       category:  formData.get('category') as string || null,
     })
 
@@ -66,7 +66,7 @@ export async function updateProduct(productId: string, formData: FormData) {
       name:      formData.get('name') as string,
       sku:       formData.get('sku') as string || null,
       own_price: Number(formData.get('own_price')) || null,
-      currency:  (formData.get('currency') as string) || 'USD',
+      currency:  (formData.get('currency') as 'USD' | 'EUR' | 'GBP' | 'CAD' | 'AUD' | 'HUF') || 'HUF',
       category:  formData.get('category') as string || null,
     })
     .eq('id', productId)
