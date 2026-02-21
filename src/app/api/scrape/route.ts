@@ -3,7 +3,6 @@ import * as cheerio from 'cheerio'
 import { createClient } from '@/lib/supabase/server'
 import { sendPriceAlert } from '@/lib/email'
 
-// Általános ár selectorok — a legtöbb e-commerce oldalon működnek
 const PRICE_SELECTORS = [
   '[data-price]',
   '[itemprop="price"]',
@@ -25,7 +24,6 @@ function extractPrice(html: string): number | null {
       ?? el.attr('content')
       ?? el.text()
 
-    // Tisztítás: 29 990 Ft → 29990
     const cleaned = raw
       .replace(/[^\d.,]/g, '')
       .replace(/\s/g, '')
@@ -35,7 +33,6 @@ function extractPrice(html: string): number | null {
     if (!isNaN(price) && price > 0) return price
   }
 
-  // Fallback: regex az egész HTML-en
   const match = html.match(/["']price["']\s*[":]\s*["']?([\d]+\.?[\d]*)/i)
   return match ? parseFloat(match[1]) : null
 }
@@ -71,7 +68,6 @@ export async function POST(request: NextRequest) {
         const html = await response.text()
         const scrapedPrice = extractPrice(html)
 
-        // Delta számítás
         const { data: lastPrice } = await supabase
           .from('price_history')
           .select('scraped_price')
@@ -86,31 +82,6 @@ export async function POST(request: NextRequest) {
         const deltaPct = delta && prevPrice ? (delta / prevPrice) * 100 : null
 
         await supabase.from('price_history').insert({
-          // Email értesítés ha a versenytárs olcsóbb
-const product = competitorUrl.products as { own_price: number; currency: string }
-if (
-  scrapedPrice &&
-  product?.own_price &&
-  scrapedPrice < product.own_price
-) {
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('email')
-    .eq('id', competitorUrl.user_id)
-    .single()
-
-  if (profile?.email) {
-    await sendPriceAlert({
-      to:              profile.email,
-      productName:     competitorUrl.competitor_name,
-      competitorName:  competitorUrl.competitor_name,
-      competitorPrice: scrapedPrice,
-      ownPrice:        product.own_price,
-      currency:        product.currency,
-      url:             competitorUrl.url,
-    })
-  }
-}
           competitor_url_id: competitorUrl.id,
           product_id:        competitorUrl.product_id,
           user_id:           competitorUrl.user_id,
@@ -128,6 +99,28 @@ if (
             consecutive_failures: scrapedPrice ? 0 : competitorUrl.consecutive_failures + 1,
           })
           .eq('id', competitorUrl.id)
+
+        // Email értesítés ha a versenytárs olcsóbb
+        const product = competitorUrl.products as { own_price: number; currency: string }
+        if (scrapedPrice && product?.own_price && scrapedPrice < product.own_price) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('email')
+            .eq('id', competitorUrl.user_id)
+            .single()
+
+          if (profile?.email) {
+            await sendPriceAlert({
+              to:              profile.email,
+              productName:     competitorUrl.competitor_name,
+              competitorName:  competitorUrl.competitor_name,
+              competitorPrice: scrapedPrice,
+              ownPrice:        product.own_price,
+              currency:        product.currency,
+              url:             competitorUrl.url,
+            })
+          }
+        }
 
         return { id: competitorUrl.id, status: 'success', price: scrapedPrice }
 
