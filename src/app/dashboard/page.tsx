@@ -9,7 +9,6 @@ import {
 export default async function DashboardPage() {
   const supabase = await createClient()
 
-  // latest_prices view lekérése
   const { data: prices } = await supabase
     .from('latest_prices')
     .select('*')
@@ -23,7 +22,6 @@ export default async function DashboardPage() {
     .from('competitor_urls')
     .select('id')
 
-  // Árak ahol a versenytárs olcsóbb mint a saját ár
   const undercut = prices?.filter(p =>
     p.scraped_price && p.own_price && p.scraped_price < p.own_price
   ).length ?? 0
@@ -32,7 +30,6 @@ export default async function DashboardPage() {
     <div className="p-8 space-y-8">
       <h1 className="text-3xl font-bold">Dashboard</h1>
 
-      {/* ── Összesítő kártyák ── */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader><CardTitle className="text-sm text-muted-foreground">Saját Termékek</CardTitle></CardHeader>
@@ -52,7 +49,6 @@ export default async function DashboardPage() {
         </Card>
       </div>
 
-      {/* ── Ártáblázat ── */}
       <Card>
         <CardHeader><CardTitle>Jelenlegi Versenytárs Árak</CardTitle></CardHeader>
         <CardContent>
@@ -77,28 +73,30 @@ export default async function DashboardPage() {
                   <TableRow key={row.competitor_url_id}
                     className={isUndercut ? 'bg-red-50' : ''}
                   >
-                    <TableCell className="font-medium">{row.product_name}</TableCell>
+                    <TableCell className="font-medium">
+                      {row.product_name ?? '—'}
+                    </TableCell>
                     <TableCell>
                       <a href={row.url ?? '#'} target="_blank"
                         className="text-blue-600 hover:underline">
-                        {row.competitor_name}
+                        {row.competitor_name ?? '—'}
                       </a>
                     </TableCell>
                     <TableCell>
                       {row.own_price
-                        ? `${row.own_price} ${row.currency}`
+                        ? `${Number(row.own_price).toLocaleString('hu-HU')} ${row.currency ?? ''}`
                         : <span className="text-muted-foreground">—</span>}
                     </TableCell>
                     <TableCell className={isUndercut ? 'text-red-600 font-bold' : 'text-green-600'}>
                       {row.scraped_price
-                        ? `${row.scraped_price} ${row.currency}`
+                        ? `${Number(row.scraped_price).toLocaleString('hu-HU')} ${row.currency ?? ''}`
                         : <span className="text-muted-foreground">—</span>}
                     </TableCell>
                     <TableCell>
                       {row.price_delta_pct != null ? (
                         <span className={row.price_delta_pct < 0 ? 'text-green-600' : 'text-red-600'}>
                           {row.price_delta_pct > 0 ? '+' : ''}
-                          {Number(row.price_delta_pct).toFixed(2)}%
+                          {Number(row.price_delta_pct ?? 0).toFixed(2)}%
                         </span>
                       ) : '—'}
                     </TableCell>
@@ -108,7 +106,9 @@ export default async function DashboardPage() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-muted-foreground text-sm">
-                      {new Date(row.scraped_at).toLocaleDateString('hu-HU')}
+                      {row.scraped_at
+                        ? new Date(row.scraped_at).toLocaleDateString('hu-HU')
+                        : '—'}
                     </TableCell>
                   </TableRow>
                 )
