@@ -79,7 +79,7 @@ export default async function DashboardPage() {
                   >
                     <TableCell className="font-medium">{row.product_name}</TableCell>
                     <TableCell>
-                      <a href={row.url} target="_blank"
+                      <a href={row.url ?? '#'} target="_blank"
                         className="text-blue-600 hover:underline">
                         {row.competitor_name}
                       </a>
