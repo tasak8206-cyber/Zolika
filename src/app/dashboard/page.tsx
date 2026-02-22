@@ -32,15 +32,25 @@ export default async function DashboardPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
-          <CardHeader><CardTitle className="text-sm text-muted-foreground">Saját Termékek</CardTitle></CardHeader>
-          <CardContent><p className="text-4xl font-bold">{products?.length ?? 0}</p></CardContent>
+          <CardHeader>
+            <CardTitle className="text-sm text-muted-foreground">Saját Termékek</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-4xl font-bold">{products?.length ?? 0}</p>
+          </CardContent>
         </Card>
         <Card>
-          <CardHeader><CardTitle className="text-sm text-muted-foreground">Figyelt URL-ek</CardTitle></CardHeader>
-          <CardContent><p className="text-4xl font-bold">{urls?.length ?? 0}</p></CardContent>
+          <CardHeader>
+            <CardTitle className="text-sm text-muted-foreground">Figyelt URL-ek</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-4xl font-bold">{urls?.length ?? 0}</p>
+          </CardContent>
         </Card>
         <Card className={undercut > 0 ? 'border-red-500' : ''}>
-          <CardHeader><CardTitle className="text-sm text-muted-foreground">Olcsóbb Versenytárs</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle className="text-sm text-muted-foreground">Olcsóbb Versenytárs</CardTitle>
+          </CardHeader>
           <CardContent>
             <p className={`text-4xl font-bold ${undercut > 0 ? 'text-red-500' : 'text-green-500'}`}>
               {undercut}
@@ -50,7 +60,9 @@ export default async function DashboardPage() {
       </div>
 
       <Card>
-        <CardHeader><CardTitle>Jelenlegi Versenytárs Árak</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle>Jelenlegi Versenytárs Árak</CardTitle>
+        </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
@@ -77,8 +89,11 @@ export default async function DashboardPage() {
                       {row.product_name ?? '—'}
                     </TableCell>
                     <TableCell>
-                      <a href={row.url ?? '#'} target="_blank"
-                        className="text-blue-600 hover:underline">
+                      
+                        href={row.url ?? '#'}
+                        target="_blank"
+                        className="text-blue-600 hover:underline"
+                      >
                         {row.competitor_name ?? '—'}
                       </a>
                     </TableCell>
@@ -94,8 +109,8 @@ export default async function DashboardPage() {
                     </TableCell>
                     <TableCell>
                       {row.price_delta_pct != null ? (
-                        <span className={row.price_delta_pct < 0 ? 'text-green-600' : 'text-red-600'}>
-                          {row.price_delta_pct > 0 ? '+' : ''}
+                        <span className={Number(row.price_delta_pct) < 0 ? 'text-green-600' : 'text-red-600'}>
+                          {Number(row.price_delta_pct) > 0 ? '+' : ''}
                           {Number(row.price_delta_pct ?? 0).toFixed(2)}%
                         </span>
                       ) : '—'}
