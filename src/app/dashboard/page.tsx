@@ -33,7 +33,9 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm text-muted-foreground">Saját Termékek</CardTitle>
+            <CardTitle className="text-sm text-muted-foreground">
+              Saját Termékek
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-4xl font-bold">{products?.length ?? 0}</p>
@@ -41,7 +43,9 @@ export default async function DashboardPage() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm text-muted-foreground">Figyelt URL-ek</CardTitle>
+            <CardTitle className="text-sm text-muted-foreground">
+              Figyelt URL-ek
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-4xl font-bold">{urls?.length ?? 0}</p>
@@ -49,7 +53,9 @@ export default async function DashboardPage() {
         </Card>
         <Card className={undercut > 0 ? 'border-red-500' : ''}>
           <CardHeader>
-            <CardTitle className="text-sm text-muted-foreground">Olcsóbb Versenytárs</CardTitle>
+            <CardTitle className="text-sm text-muted-foreground">
+              Olcsóbb Versenytárs
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <p className={`text-4xl font-bold ${undercut > 0 ? 'text-red-500' : 'text-green-500'}`}>
@@ -82,7 +88,8 @@ export default async function DashboardPage() {
                   && row.scraped_price < row.own_price
 
                 return (
-                  <TableRow key={row.competitor_url_id}
+                  <TableRow
+                    key={row.competitor_url_id}
                     className={isUndercut ? 'bg-red-50' : ''}
                   >
                     <TableCell className="font-medium">
@@ -92,6 +99,7 @@ export default async function DashboardPage() {
                       
                         href={row.url ?? '#'}
                         target="_blank"
+                        rel="noreferrer"
                         className="text-blue-600 hover:underline"
                       >
                         {row.competitor_name ?? '—'}
@@ -100,18 +108,20 @@ export default async function DashboardPage() {
                     <TableCell>
                       {row.own_price
                         ? `${Number(row.own_price).toLocaleString('hu-HU')} ${row.currency ?? ''}`
-                        : <span className="text-muted-foreground">—</span>}
+                        : '—'}
                     </TableCell>
-                    <TableCell className={isUndercut ? 'text-red-600 font-bold' : 'text-green-600'}>
+                    <TableCell
+                      className={isUndercut ? 'text-red-600 font-bold' : 'text-green-600'}
+                    >
                       {row.scraped_price
                         ? `${Number(row.scraped_price).toLocaleString('hu-HU')} ${row.currency ?? ''}`
-                        : <span className="text-muted-foreground">—</span>}
+                        : '—'}
                     </TableCell>
                     <TableCell>
                       {row.price_delta_pct != null ? (
                         <span className={Number(row.price_delta_pct) < 0 ? 'text-green-600' : 'text-red-600'}>
                           {Number(row.price_delta_pct) > 0 ? '+' : ''}
-                          {Number(row.price_delta_pct ?? 0).toFixed(2)}%
+                          {Number(row.price_delta_pct).toFixed(2)}%
                         </span>
                       ) : '—'}
                     </TableCell>
@@ -130,7 +140,10 @@ export default async function DashboardPage() {
               })}
               {(!prices || prices.length === 0) && (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                  <TableCell
+                    colSpan={7}
+                    className="text-center text-muted-foreground py-8"
+                  >
                     Még nincsenek adatok. Adj hozzá termékeket és versenytárs URL-eket!
                   </TableCell>
                 </TableRow>
