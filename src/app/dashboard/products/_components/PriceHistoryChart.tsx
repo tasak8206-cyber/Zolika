@@ -35,7 +35,9 @@ export function PriceHistoryChart({ data, competitorName }: Props) {
           <XAxis dataKey="date" tick={{ fontSize: 10 }} />
           <YAxis tick={{ fontSize: 10 }} width={60} />
           <Tooltip
-            formatter={(value: number) => [`${value.toLocaleString('hu-HU')} Ft`, 'Ár']}
+            formatter={(value: number | undefined) => [
+  value != null ? `${value.toLocaleString('hu-HU')} Ft` : '—', 'Ár'
+]}
           />
           <Line
             type="monotone"
