@@ -6,12 +6,14 @@ import {
 } from 'recharts'
 
 interface Props {
-  data: { scraped_price: number; scraped_at: string }[]
+  data: { scraped_price: number | null; scraped_at: string }[]
   competitorName: string
 }
 
 export function PriceHistoryChart({ data, competitorName }: Props) {
-  const formatted = data.map(d => ({
+  const formatted = data
+  .filter(d => d.scraped_price != null)
+  .map(d => ({
     date: new Date(d.scraped_at).toLocaleDateString('hu-HU', {
       month: 'short', day: 'numeric'
     }),
