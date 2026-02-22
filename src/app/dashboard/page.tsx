@@ -29,13 +29,10 @@ export default async function DashboardPage() {
   return (
     <div className="p-8 space-y-8">
       <h1 className="text-3xl font-bold">Dashboard</h1>
-
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm text-muted-foreground">
-              Saját Termékek
-            </CardTitle>
+            <CardTitle className="text-sm text-muted-foreground">Saját Termékek</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-4xl font-bold">{products?.length ?? 0}</p>
@@ -43,9 +40,7 @@ export default async function DashboardPage() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm text-muted-foreground">
-              Figyelt URL-ek
-            </CardTitle>
+            <CardTitle className="text-sm text-muted-foreground">Figyelt URL-ek</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-4xl font-bold">{urls?.length ?? 0}</p>
@@ -53,9 +48,7 @@ export default async function DashboardPage() {
         </Card>
         <Card className={undercut > 0 ? 'border-red-500' : ''}>
           <CardHeader>
-            <CardTitle className="text-sm text-muted-foreground">
-              Olcsóbb Versenytárs
-            </CardTitle>
+            <CardTitle className="text-sm text-muted-foreground">Olcsóbb Versenytárs</CardTitle>
           </CardHeader>
           <CardContent>
             <p className={`text-4xl font-bold ${undercut > 0 ? 'text-red-500' : 'text-green-500'}`}>
@@ -64,7 +57,6 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
       </div>
-
       <Card>
         <CardHeader>
           <CardTitle>Jelenlegi Versenytárs Árak</CardTitle>
@@ -84,24 +76,14 @@ export default async function DashboardPage() {
             </TableHeader>
             <TableBody>
               {prices?.map((row) => {
-                const isUndercut = row.scraped_price && row.own_price
-                  && row.scraped_price < row.own_price
-
+                const isUndercut = Boolean(
+                  row.scraped_price && row.own_price && row.scraped_price < row.own_price
+                )
                 return (
-                  <TableRow
-                    key={row.competitor_url_id}
-                    className={isUndercut ? 'bg-red-50' : ''}
-                  >
-                    <TableCell className="font-medium">
-                      {row.product_name ?? '—'}
-                    </TableCell>
+                  <TableRow key={row.competitor_url_id} className={isUndercut ? 'bg-red-50' : ''}>
+                    <TableCell className="font-medium">{row.product_name ?? '—'}</TableCell>
                     <TableCell>
-                      
-                        href={row.url ?? '#'}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-blue-600 hover:underline"
-                      >
+                      <a href={row.url ?? '#'} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">
                         {row.competitor_name ?? '—'}
                       </a>
                     </TableCell>
@@ -110,9 +92,7 @@ export default async function DashboardPage() {
                         ? `${Number(row.own_price).toLocaleString('hu-HU')} ${row.currency ?? ''}`
                         : '—'}
                     </TableCell>
-                    <TableCell
-                      className={isUndercut ? 'text-red-600 font-bold' : 'text-green-600'}
-                    >
+                    <TableCell className={isUndercut ? 'text-red-600 font-bold' : 'text-green-600'}>
                       {row.scraped_price
                         ? `${Number(row.scraped_price).toLocaleString('hu-HU')} ${row.currency ?? ''}`
                         : '—'}
@@ -140,10 +120,7 @@ export default async function DashboardPage() {
               })}
               {(!prices || prices.length === 0) && (
                 <TableRow>
-                  <TableCell
-                    colSpan={7}
-                    className="text-center text-muted-foreground py-8"
-                  >
+                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
                     Még nincsenek adatok. Adj hozzá termékeket és versenytárs URL-eket!
                   </TableCell>
                 </TableRow>
