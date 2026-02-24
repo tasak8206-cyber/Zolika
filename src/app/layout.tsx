@@ -1,20 +1,27 @@
-import React from 'react';
-import { Provider } from 'some-provider';
-import './globals.css'; // Tailwind CSS import
+import React from 'react'
+import './globals.css'
 
 export const metadata = {
-  title: 'My App',
-  description: 'A description of my app',
-};
+  title: 'Zolika - E-commerce Price Monitoring',
+  description: 'Monitor és kezel e-commerce termék árakat',
+}
 
-const Layout = ({ children }) => {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   return (
-    <Provider>
-      <html lang="en">
-        <body>{children}</body>
-      </html>
-    </Provider>
-  );
-};
-
-export default Layout;
+    <html lang="hu">
+      <head>
+        {/* ✅ BASIC META TAGS */}
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+      </head>
+      <body suppressHydrationWarning>
+        {/* ✅ GYEREK KOMPONENSEK */}
+        {children}
+      </body>
+    </html>
+  )
+}

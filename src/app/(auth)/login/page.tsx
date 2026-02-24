@@ -1,91 +1,145 @@
 'use client'
 
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { toast } from 'sonner'
+import { createClient } from '@supabase/supabase-js'
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-  const [isRegister, setIsRegister] = useState(false)
+  const [email, setEmail] = useState('test@test.com')
+  const [password, setPassword] = useState('Test123!')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
   const router = useRouter()
-  const supabase = createClient()
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
-    setIsLoading(true)
+    setError('')
+    setLoading(true)
 
     try {
-      if (isRegister) {
-        const { error } = await supabase.auth.signUp({ email, password })
-        if (error) throw error
-        toast.success('Sikeres regisztráció! Ellenőrizd az emailed.')
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password })
-        if (error) throw error
-        router.push('/dashboard')
-        router.refresh()
+      // ✅ KLIENS-OLDALI SUPABASE AUTH
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+      )
+
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      if (signInError) {
+        console.error('❌ Bejelentkezési hiba:', signInError.message)
+        setError(signInError.message)
+        setLoading(false)
+        return
       }
-    } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : 'Hiba történt')
-    } finally {
-      setIsLoading(false)
+
+      if (data.user && data.session) {
+        console.log('✅ Sikeres bejelentkezés:', data.user.email)
+        
+        // ✅ localStorage-ba
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('user', JSON.stringify(data.user))
+          localStorage.setItem('session', JSON.stringify(data.session))
+        }
+        
+        // ✅ DELAY + redirect
+        setTimeout(() => {
+          router.push('/dashboard')
+        }, 500)
+        return
+      }
+
+      setError('Ismeretlen hiba!')
+      setLoading(false)
+    } catch (err: any) {
+      console.error('❌ Hiba:', err)
+      setError(err.message || 'Bejelentkezési hiba!')
+      setLoading(false)
     }
   }
 
   return (
-    <Card className="w-full max-w-md">
-      <CardHeader className="text-center">
-        <CardTitle className="text-2xl">
-          {isRegister ? '🆕 Regisztráció' : '🔐 Bejelentkezés'}
-        </CardTitle>
-        <CardDescription>
-          {isRegister
-            ? 'Hozz létre egy új fiókot'
-            : 'Jelentkezz be a fiókodba'}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Email</label>
-            <Input
-              type="email"
-              placeholder="pelda@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
+    <div style={{
+      maxWidth: '500px',
+      margin: '50px auto',
+      padding: '20px',
+      fontFamily: 'Arial, sans-serif'
+    }}>
+      <h1>🔐 Bejelentkezés</h1>
+
+      <form onSubmit={handleLogin}>
+        <div style={{ marginBottom: '15px' }}>
+          <label htmlFor="email">Email:</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            disabled={loading}
+            style={{
+              width: '100%',
+              padding: '10px',
+              marginTop: '5px',
+              border: '1px solid #ccc',
+              borderRadius: '4px',
+              boxSizing: 'border-box',
+            }}
+            required
+          />
+        </div>
+
+        <div style={{ marginBottom: '15px' }}>
+          <label htmlFor="password">Jelszó:</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            disabled={loading}
+            style={{
+              width: '100%',
+              padding: '10px',
+              marginTop: '5px',
+              border: '1px solid #ccc',
+              borderRadius: '4px',
+              boxSizing: 'border-box',
+            }}
+            required
+          />
+        </div>
+
+        {error && (
+          <div style={{ color: 'red', marginBottom: '15px', padding: '10px', backgroundColor: '#ffe0e0', borderRadius: '4px' }}>
+            ❌ {error}
           </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Jelszó</label>
-            <Input
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? 'Betöltés...' : isRegister ? 'Regisztráció' : 'Bejelentkezés'}
-          </Button>
-        </form>
-        <p className="text-center text-sm text-muted-foreground mt-4">
-          {isRegister ? 'Már van fiókod?' : 'Nincs még fiókod?'}{' '}
-          <button
-            onClick={() => setIsRegister(!isRegister)}
-            className="text-primary underline font-medium"
-          >
-            {isRegister ? 'Bejelentkezés' : 'Regisztráció'}
-          </button>
-        </p>
-      </CardContent>
-    </Card>
+        )}
+
+        <button
+          type="submit"
+          disabled={loading}
+          style={{
+            width: '100%',
+            padding: '12px',
+            backgroundColor: loading ? '#ccc' : '#000',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: loading ? 'not-allowed' : 'pointer',
+            fontSize: '16px',
+            fontWeight: 'bold',
+          }}
+        >
+          {loading ? '⏳ Betöltés...' : '✅ Bejelentkezés'}
+        </button>
+      </form>
+
+      <p style={{ marginTop: '20px', fontSize: '12px', color: '#666' }}>
+        Teszt: test@test.com / Test123!
+      </p>
+    </div>
   )
 }

@@ -1,17 +1,12 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server'
 
 export function middleware(request: NextRequest) {
-    const isAuthenticated = !!request.cookies.get('auth_token'); // Example of checking authentication
-    const { pathname } = request.nextUrl;
-
-    if (!isAuthenticated && pathname === '/dashboard') {
-        return NextResponse.redirect(new URL('/login', request.url));
-    }
-
-    return NextResponse.next();
+  // Middleware temporarily disabled for auth debugging
+  return NextResponse.next()
 }
 
 export const config = {
-    matcher: ['/dashboard'],
-};
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+  ],
+}
