@@ -1,12 +1,9 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 export async function GET(req: NextRequest) {
     try {
+        const supabase = await createClient();
         const { data, error } = await supabase
             .from('products')
             .select('*')
@@ -25,15 +22,21 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
-        const { name, price, category } = body;
+        const { name, own_price, category } = body;
 
         if (!name) {
             return NextResponse.json({ error: 'Product name is required' }, { status: 400 });
         }
 
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
         const { data, error } = await supabase
             .from('products')
-            .insert([{ name, price: price || 0, category: category || 'Uncategorized' }])
+            .insert([{ name, own_price: own_price || null, category: category || null, user_id: user.id }])
             .select();
 
         if (error) {

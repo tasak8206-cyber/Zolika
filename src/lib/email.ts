@@ -1,6 +1,13 @@
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+let resendClient: Resend | null = null
+
+function getResend() {
+  if (!resendClient) {
+    resendClient = new Resend(process.env.RESEND_API_KEY)
+  }
+  return resendClient
+}
 
 interface PriceAlertProps {
   to: string
@@ -24,7 +31,7 @@ export async function sendPriceAlert({
   const diff = ((competitorPrice - ownPrice) / ownPrice * 100).toFixed(1)
   const cheaper = competitorPrice < ownPrice
 
-  await resend.emails.send({
+  await getResend().emails.send({
     from: 'Árazás Figyelő <ertesito@resend.dev>',
     to,
     subject: `⚠️ ${competitorName} olcsóbban árulja: ${productName}`,

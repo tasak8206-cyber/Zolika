@@ -1,11 +1,16 @@
 import React, { useState } from 'react';
 
-const ProductDialog = ({ isOpen, onClose }) => {
+interface ProductDialogProps {
+    isOpen: boolean;
+    onClose: () => void;
+}
+
+const ProductDialog = ({ isOpen, onClose }: ProductDialogProps) => {
     const [productName, setProductName] = useState('');
     const [productPrice, setProductPrice] = useState('');
     const [productDescription, setProductDescription] = useState('');
 
-    const handleSubmit = (e) => {
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         // Handle product submission logic here
         console.log({ productName, productPrice, productDescription });

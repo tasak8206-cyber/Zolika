@@ -2,83 +2,49 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@supabase/supabase-js'
+import { createClient } from '@/lib/supabase/client'
 
 export default function DashboardPage() {
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
-  const [isClient, setIsClient] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
-    // ✅ GYŐZŐDJ MEG, HOGY KLIENS-OLDALON VAGY
-    setIsClient(true)
-  }, [])
+    const supabase = createClient()
 
-  useEffect(() => {
-    if (!isClient) return  // ✅ NE FUSS SZERVER-OLDALON!
-
-    checkAuth()
-  }, [isClient])  // ✅ PROPER DEPENDENCY!
-
-  async function checkAuth() {
-    try {
-      // ✅ ELLENŐRIZD, HOGY KLIENS
-      if (typeof window === 'undefined') {
-        return
-      }
-
-      // ✅ localStorage-ből olvass
-      const userStr = localStorage.getItem('user')
-      
-      if (!userStr) {
-        console.log('❌ Nincs user localstorage-ban')
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) {
         router.push('/login')
         return
       }
-
-      const userData = JSON.parse(userStr)
-      console.log('✅ User found:', userData.email)
-      setUser(userData)
+      setUser(user)
       setLoading(false)
-    } catch (err) {
-      console.error('Auth error:', err)
-      
-      // ✅ TISZTÍTS FEL
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('user')
-        localStorage.removeItem('session')
+    })
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session) {
+        router.push('/login')
+        return
       }
-      
-      router.push('/login')
+      setUser(session.user)
+    })
+
+    return () => {
+      subscription.unsubscribe()
     }
-  }
+  }, [router])
 
   async function handleLogout() {
     try {
-      // ✅ ÚJ CLIENT - LOGOUT-hoz
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-      )
-
+      const supabase = createClient()
       await supabase.auth.signOut()
-
-      // ✅ localStorage CLEAN UP
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('user')
-        localStorage.removeItem('session')
-      }
-
-      console.log('✅ Kijelentkezve')
       router.push('/login')
     } catch (err) {
       console.error('Logout error:', err)
     }
   }
 
-  // ✅ AMÍG BETÖLTÖDIK VAGY NINCS KLIENS
-  if (!isClient || loading) {
+  if (loading) {
     return (
       <div style={{ padding: '20px', textAlign: 'center' }}>
         <h2>⏳ Betöltés...</h2>
@@ -86,7 +52,6 @@ export default function DashboardPage() {
     )
   }
 
-  // ✅ HA NEM VAN USER - NE MUTASS SEMMIT
   if (!user) {
     return (
       <div style={{ padding: '20px', textAlign: 'center' }}>

@@ -1,8 +1,8 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Session } from '@supabase/supabase-js'
-import { createClient } from '@/utils/supabase/client'
+import { createClient } from '@/lib/supabase/client'
 
 /**
  * useAuth Hook
@@ -13,13 +13,16 @@ export function useAuth() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const supabase = createClient()
+  // Stable reference – prevents multiple GoTrueClient instances
+  const supabaseRef = useRef(createClient())
 
   // Session frissítés
   useEffect(() => {
+    const client = supabaseRef.current
+
     const fetchSession = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession()
+        const { data: { session } } = await client.auth.getSession()
         setSession(session)
         setError(null)
       } catch (err) {
@@ -36,7 +39,7 @@ export function useAuth() {
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
+    } = client.auth.onAuthStateChange((event, session) => {
       setSession(session)
       setLoading(false)
 
@@ -57,26 +60,13 @@ export function useAuth() {
       setError(null)
 
       try {
-        // CSRF token lekérése
-        const csrfResponse = await fetch('/api/auth/login', {
-          method: 'GET',
-        })
-        const { data: csrfData } = await csrfResponse.json()
-
-        // Bejelentkezés
-        const response = await fetch('/api/auth/login', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-Token': csrfData.csrfToken,
-          },
-          body: JSON.stringify({ email, password }),
+        const { data, error: signInError } = await supabaseRef.current.auth.signInWithPassword({
+          email,
+          password,
         })
 
-        const { data, error: apiError } = await response.json()
-
-        if (!response.ok || apiError) {
-          throw new Error(apiError?.message || 'Login failed')
+        if (signInError) {
+          throw new Error(signInError.message)
         }
 
         setSession(data?.session || null)
@@ -98,22 +88,10 @@ export function useAuth() {
     setError(null)
 
     try {
-      // CSRF token lekérése
-      const csrfResponse = await fetch('/api/auth/login', {
-        method: 'GET',
-      })
-      const { data: csrfData } = await csrfResponse.json()
+      const { error: signOutError } = await supabaseRef.current.auth.signOut()
 
-      // Kijelentkezés
-      const response = await fetch('/api/auth/logout', {
-        method: 'POST',
-        headers: {
-          'X-CSRF-Token': csrfData.csrfToken,
-        },
-      })
-
-      if (!response.ok) {
-        throw new Error('Logout failed')
+      if (signOutError) {
+        throw new Error(signOutError.message)
       }
 
       setSession(null)
