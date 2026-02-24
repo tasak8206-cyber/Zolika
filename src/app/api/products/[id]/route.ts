@@ -1,12 +1,17 @@
-import { NextResponse } from 'next/server';
-import { Product } from '@/models/Product'; // assuming you have a Product model
+import { createClient } from '@/lib/supabase/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 // GET individual product by ID
-export async function GET(req, { params }) {
-    const { id } = params;
-    const product = await Product.findById(id);
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
+    const supabase = await createClient();
+    const { data: product, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('id', id)
+        .single();
 
-    if (!product) {
+    if (error || !product) {
         return NextResponse.json({ error: 'Product not found' }, { status: 404 });
     }
 
@@ -14,12 +19,18 @@ export async function GET(req, { params }) {
 }
 
 // PUT update an individual product by ID
-export async function PUT(req, { params }) {
-    const { id } = params;
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
     const newData = await req.json();
-    const product = await Product.findByIdAndUpdate(id, newData, { new: true });
+    const supabase = await createClient();
+    const { data: product, error } = await supabase
+        .from('products')
+        .update(newData)
+        .eq('id', id)
+        .select()
+        .single();
 
-    if (!product) {
+    if (error || !product) {
         return NextResponse.json({ error: 'Product not found' }, { status: 404 });
     }
 
@@ -27,11 +38,15 @@ export async function PUT(req, { params }) {
 }
 
 // DELETE an individual product by ID
-export async function DELETE(req, { params }) {
-    const { id } = params;
-    const product = await Product.findByIdAndDelete(id);
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
+    const supabase = await createClient();
+    const { error } = await supabase
+        .from('products')
+        .delete()
+        .eq('id', id);
 
-    if (!product) {
+    if (error) {
         return NextResponse.json({ error: 'Product not found' }, { status: 404 });
     }
 

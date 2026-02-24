@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@supabase/supabase-js'
+import { createClient } from '@/lib/supabase/client'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('test@test.com')
@@ -17,11 +17,7 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
-      // ✅ KLIENS-OLDALI SUPABASE AUTH
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-      )
+      const supabase = createClient()
 
       const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email,
@@ -37,17 +33,8 @@ export default function LoginPage() {
 
       if (data.user && data.session) {
         console.log('✅ Sikeres bejelentkezés:', data.user.email)
-        
-        // ✅ localStorage-ba
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('user', JSON.stringify(data.user))
-          localStorage.setItem('session', JSON.stringify(data.session))
-        }
-        
-        // ✅ DELAY + redirect
-        setTimeout(() => {
-          router.push('/dashboard')
-        }, 500)
+        router.refresh()
+        router.push('/dashboard')
         return
       }
 

@@ -1,19 +1,31 @@
-import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs';
-import { User } from '@supabase/supabase-js';
-import { NextRequest } from 'next/server';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
 
 /**
  * Initialize Supabase client for server-side operations.
  * Handles authentication and cookie management.
  */
-export const supabaseServerClient = (req: NextRequest) => {
-  return createServerSupabaseClient({
-    req,
-    // Optional cookie and environment configuration
-    cookieOptions: {   
-      name: 'your-cookie-name', // Set your cookie name here
-    },
-    supabaseUrl: process.env.SUPABASE_URL,
-    supabaseKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
-  });
-};
+export async function createClient() {
+  const cookieStore = await cookies();
+
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            );
+          } catch {
+            // Silently ignore in Server Components — middleware handles refresh
+          }
+        },
+      },
+    }
+  );
+}

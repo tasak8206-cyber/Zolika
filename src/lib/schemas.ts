@@ -107,7 +107,7 @@ export const PriceAlertSchema = z.object({
     .min(0, 'Ár küszöbnek pozitívnak kell lennie')
     .max(999999, 'Ár küszöb túl nagy'),
   alertType: z.enum(['INCREASE', 'DECREASE'], {
-    errorMap: () => ({ message: 'Riasztás típus INCREASE vagy DECREASE' }),
+    error: 'Riasztás típus INCREASE vagy DECREASE',
   }),
   enabled: z.boolean().default(true),
 })
@@ -120,7 +120,7 @@ export type PriceAlertFormData = z.infer<typeof PriceAlertSchema>
 export function getValidationErrors(error: unknown): Record<string, string> {
   if (error instanceof z.ZodError) {
     const errors: Record<string, string> = {}
-    error.errors.forEach((err) => {
+    error.issues.forEach((err) => {
       const path = err.path.join('.')
       errors[path] = err.message
     })

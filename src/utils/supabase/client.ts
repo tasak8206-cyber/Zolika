@@ -1,11 +1,14 @@
-import { createClient } from '@supabase/supabase-js'
+import { createBrowserClient } from '@supabase/ssr'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+let browserClient: ReturnType<typeof createBrowserClient> | null = null
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn('⚠️ Missing Supabase environment variables')
+// Lazy singleton – prevents multiple GoTrueClient instances
+export function createClient() {
+  if (!browserClient) {
+    browserClient = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+  }
+  return browserClient
 }
-
-// ✅ KLIENS-OLDALI SUPABASE CLIENT
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
