@@ -3,10 +3,14 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { Label } from '@/components/ui/label'
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('test@test.com')
-  const [password, setPassword] = useState('Test123!')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
@@ -18,115 +22,74 @@ export default function LoginPage() {
 
     try {
       const supabase = createClient()
-
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password })
 
       if (signInError) {
-        console.error('❌ Bejelentkezési hiba:', signInError.message)
         setError(signInError.message)
         setLoading(false)
         return
       }
 
       if (data.user && data.session) {
-        console.log('✅ Sikeres bejelentkezés:', data.user.email)
         router.refresh()
         router.push('/dashboard')
         return
       }
 
-      setError('Ismeretlen hiba!')
+      setError('An unexpected error occurred. Please try again.')
       setLoading(false)
-    } catch (err: any) {
-      console.error('❌ Hiba:', err)
-      setError(err.message || 'Bejelentkezési hiba!')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Login failed.')
       setLoading(false)
     }
   }
 
   return (
-    <div style={{
-      maxWidth: '500px',
-      margin: '50px auto',
-      padding: '20px',
-      fontFamily: 'Arial, sans-serif'
-    }}>
-      <h1>🔐 Bejelentkezés</h1>
-
-      <form onSubmit={handleLogin}>
-        <div style={{ marginBottom: '15px' }}>
-          <label htmlFor="email">Email:</label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            disabled={loading}
-            style={{
-              width: '100%',
-              padding: '10px',
-              marginTop: '5px',
-              border: '1px solid #ccc',
-              borderRadius: '4px',
-              boxSizing: 'border-box',
-            }}
-            required
-          />
-        </div>
-
-        <div style={{ marginBottom: '15px' }}>
-          <label htmlFor="password">Jelszó:</label>
-          <input
-            type="password"
-            id="password"
-            name="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            disabled={loading}
-            style={{
-              width: '100%',
-              padding: '10px',
-              marginTop: '5px',
-              border: '1px solid #ccc',
-              borderRadius: '4px',
-              boxSizing: 'border-box',
-            }}
-            required
-          />
-        </div>
-
-        {error && (
-          <div style={{ color: 'red', marginBottom: '15px', padding: '10px', backgroundColor: '#ffe0e0', borderRadius: '4px' }}>
-            ❌ {error}
+    <Card className="w-full max-w-sm shadow-lg">
+      <CardHeader className="space-y-1">
+        <CardTitle className="text-2xl font-bold tracking-tight">Sign in</CardTitle>
+        <CardDescription>Enter your email and password to access your dashboard.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleLogin} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="you@company.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={loading}
+              required
+              autoComplete="email"
+            />
           </div>
-        )}
+          <div className="space-y-2">
+            <Label htmlFor="password">Password</Label>
+            <Input
+              id="password"
+              type="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={loading}
+              required
+              autoComplete="current-password"
+            />
+          </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          style={{
-            width: '100%',
-            padding: '12px',
-            backgroundColor: loading ? '#ccc' : '#000',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: loading ? 'not-allowed' : 'pointer',
-            fontSize: '16px',
-            fontWeight: 'bold',
-          }}
-        >
-          {loading ? '⏳ Betöltés...' : '✅ Bejelentkezés'}
-        </button>
-      </form>
+          {error && (
+            <p className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-md">
+              {error}
+            </p>
+          )}
 
-      <p style={{ marginTop: '20px', fontSize: '12px', color: '#666' }}>
-        Teszt: test@test.com / Test123!
-      </p>
-    </div>
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? 'Signing in…' : 'Sign in'}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   )
 }
