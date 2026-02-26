@@ -15,17 +15,20 @@ const { createClient } = require('@supabase/supabase-js');
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-  console.error(
-    '[scraper] ERROR: SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set.'
-  );
-  process.exit(1);
-}
+// Only validate env and create client when running as main script (not in tests)
+let supabase = null;
+if (require.main === module) {
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    console.error(
+      '[scraper] ERROR: SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set.'
+    );
+    process.exit(1);
+  }
 
-// Service-role client bypasses RLS for inserts
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-  auth: { persistSession: false },
-});
+  supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+    auth: { persistSession: false },
+  });
+}
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 /** Milliseconds to wait between requests to avoid hammering servers. */
@@ -318,7 +321,12 @@ async function run() {
   );
 }
 
-run().catch((err) => {
-  console.error('[scraper] Unhandled error:', err);
-  process.exit(1);
-});
+if (require.main === module) {
+  run().catch((err) => {
+    console.error('[scraper] Unhandled error:', err);
+    process.exit(1);
+  });
+}
+
+// Export pure utility functions for unit testing
+module.exports = { extractPrice, parseHungarianNumber, parseGenericNumber, scrapePrice };
