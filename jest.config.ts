@@ -7,6 +7,9 @@ const config: Config = {
   },
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
+    '^@upstash/ratelimit$': '<rootDir>/src/__mocks__/upstash-ratelimit.ts',
+    '^@upstash/redis$': '<rootDir>/src/__mocks__/upstash-redis.ts',
+    '^resend$': '<rootDir>/src/__mocks__/resend.ts',
   },
   testMatch: ['**/__tests__/**/*.test.ts'],
   clearMocks: true,
