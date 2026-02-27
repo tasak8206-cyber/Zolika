@@ -1,6 +1,6 @@
+import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import * as cheerio from 'cheerio'
-import { createClient } from '@/lib/supabase/server'
 import { sendPriceAlert } from '@/lib/email'
 
 const PRICE_SELECTORS = [
@@ -43,7 +43,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const supabase = await createClient()
+  const supabase = createAdminClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
 
   const { data: urls, error } = await supabase
     .from('competitor_urls')
