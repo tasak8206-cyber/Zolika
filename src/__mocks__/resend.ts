@@ -1,6 +1,9 @@
+const mockSend = jest.fn()
+
 export class Resend {
-  constructor(_apiKey?: string) {}
-  emails = {
-    send: (_params: Record<string, unknown>) => Promise.resolve({ id: 'mock-id' })
-  }
+  constructor(_apiKey?: string) { }
+  emails = { send: mockSend }
 }
+
+// Exportáljuk a mockot, hogy a tesztek direktben is elérhessék
+export { mockSend }

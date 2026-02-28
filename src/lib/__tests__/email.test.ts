@@ -1,25 +1,7 @@
-// We mock the Resend SDK (not a project dependency) to test the email utility
-// without making actual network calls.
-jest.mock('resend', () => {
-  const mockSend = jest.fn()
-  class MockResend {
-    emails = { send: mockSend }
-  }
-  return { Resend: MockResend, __mockSend: mockSend }
-})
-
+// A 'resend' modul globálisan mock-olva van: jest.config.ts moduleNameMapper -> src/__mocks__/resend.ts
+// A RESEND_API_KEY env globálisan beállítva: jest.setup.ts
 import { sendPriceAlert } from '../email'
 import { Resend } from 'resend'
-
-// Tesztkörnyezetben be kell állítani a RESEND_API_KEY-t,
-// különben a getResend() env validáció dob hibát.
-const originalEnv = process.env
-beforeAll(() => {
-  process.env = { ...originalEnv, RESEND_API_KEY: 'test-api-key' }
-})
-afterAll(() => {
-  process.env = originalEnv
-})
 
 // Retrieve the underlying mock from the Resend instance
 function getMockSend() {
