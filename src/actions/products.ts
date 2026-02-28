@@ -48,10 +48,14 @@ export async function addProduct(formData: FormData) {
 export async function deleteProduct(productId: string) {
   const supabase = await createClient()
 
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Unauthorized')
+
   const { error } = await supabase
     .from('products')
     .delete()
     .eq('id', productId)
+    .eq('user_id', user.id)
 
   if (error) throw new Error(error.message)
   revalidatePath('/dashboard/products')
@@ -59,6 +63,9 @@ export async function deleteProduct(productId: string) {
 
 export async function updateProduct(productId: string, formData: FormData) {
   const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Unauthorized')
 
   const { error } = await supabase
     .from('products')
@@ -70,6 +77,7 @@ export async function updateProduct(productId: string, formData: FormData) {
       category:  formData.get('category') as string || null,
     })
     .eq('id', productId)
+    .eq('user_id', user.id)
 
   if (error) throw new Error(error.message)
   revalidatePath('/dashboard/products')

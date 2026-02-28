@@ -107,7 +107,7 @@ export const PriceAlertSchema = z.object({
     .min(0, 'Ár küszöbnek pozitívnak kell lennie')
     .max(999999, 'Ár küszöb túl nagy'),
   alertType: z.enum(['INCREASE', 'DECREASE'], {
-    error: 'Riasztás típus INCREASE vagy DECREASE',
+    invalid_type_error: 'Riasztás típus INCREASE vagy DECREASE',
   }),
   enabled: z.boolean().default(true),
 })

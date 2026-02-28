@@ -44,13 +44,13 @@ export async function POST(request: NextRequest) {
   }
 
   const supabase = createAdminClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
 
   const { data: urls, error } = await supabase
     .from('competitor_urls')
-    .select('*, products(own_price, currency)')
+    .select('*, products(name, own_price, currency)')
     .eq('is_active', true)
     .lt('consecutive_failures', 5)
 
@@ -86,25 +86,25 @@ export async function POST(request: NextRequest) {
 
         await supabase.from('price_history').insert({
           competitor_url_id: competitorUrl.id,
-          product_id:        competitorUrl.product_id,
-          user_id:           competitorUrl.user_id,
-          scraped_price:     scrapedPrice,
-          status:            scrapedPrice ? 'success' : 'failed',
-          price_delta:       delta,
-          price_delta_pct:   deltaPct,
+          product_id: competitorUrl.product_id,
+          user_id: competitorUrl.user_id,
+          scraped_price: scrapedPrice,
+          status: scrapedPrice ? 'success' : 'failed',
+          price_delta: delta,
+          price_delta_pct: deltaPct,
         })
 
         await supabase
           .from('competitor_urls')
           .update({
-            last_scraped_at:      new Date().toISOString(),
-            last_status:          scrapedPrice ? 'success' : 'failed',
+            last_scraped_at: new Date().toISOString(),
+            last_status: scrapedPrice ? 'success' : 'failed',
             consecutive_failures: scrapedPrice ? 0 : competitorUrl.consecutive_failures + 1,
           })
           .eq('id', competitorUrl.id)
 
         // Email értesítés ha a versenytárs olcsóbb
-        const product = competitorUrl.products as { own_price: number; currency: string }
+        const product = competitorUrl.products as { name: string; own_price: number; currency: string }
         if (scrapedPrice && product?.own_price && scrapedPrice < product.own_price) {
           const { data: profile } = await supabase
             .from('profiles')
@@ -114,13 +114,13 @@ export async function POST(request: NextRequest) {
 
           if (profile?.email) {
             await sendPriceAlert({
-              to:              profile.email,
-              productName:     competitorUrl.competitor_name,
-              competitorName:  competitorUrl.competitor_name,
+              to: profile.email,
+              productName: product.name,
+              competitorName: competitorUrl.competitor_name,
               competitorPrice: scrapedPrice,
-              ownPrice:        product.own_price,
-              currency:        product.currency,
-              url:             competitorUrl.url,
+              ownPrice: product.own_price,
+              currency: product.currency,
+              url: competitorUrl.url,
             })
           }
         }
@@ -130,16 +130,16 @@ export async function POST(request: NextRequest) {
       } catch (err) {
         await supabase.from('price_history').insert({
           competitor_url_id: competitorUrl.id,
-          product_id:        competitorUrl.product_id,
-          user_id:           competitorUrl.user_id,
-          status:            'failed',
-          error_message:     err instanceof Error ? err.message : 'Unknown error',
+          product_id: competitorUrl.product_id,
+          user_id: competitorUrl.user_id,
+          status: 'failed',
+          error_message: err instanceof Error ? err.message : 'Unknown error',
         })
 
         await supabase
           .from('competitor_urls')
           .update({
-            last_status:          'failed',
+            last_status: 'failed',
             consecutive_failures: competitorUrl.consecutive_failures + 1,
           })
           .eq('id', competitorUrl.id)
@@ -150,7 +150,7 @@ export async function POST(request: NextRequest) {
   )
 
   const succeeded = results.filter(r => r.status === 'fulfilled').length
-  const failed    = results.filter(r => r.status === 'rejected').length
+  const failed = results.filter(r => r.status === 'rejected').length
 
   return NextResponse.json({
     message: `Scrape kész: ${succeeded} sikeres, ${failed} sikertelen`,

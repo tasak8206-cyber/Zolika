@@ -1,7 +1,7 @@
 "use client"
 
-import { 
-  LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid 
+import {
+  LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid
 } from 'recharts'
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react'
 
@@ -59,18 +59,18 @@ export function PriceHistoryChart({ data, competitorName }: { data: HistoryItem[
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={chartData}>
             <YAxis domain={['dataMin', 'dataMax']} hide />
-            <Tooltip 
-              formatter={(value: number) => [`${value.toLocaleString('hu-HU')} Ft`, 'Ár']}
+            <Tooltip
+              formatter={(value) => [`${Number(value).toLocaleString('hu-HU')} Ft`, 'Ár']}
               labelStyle={{ display: 'none' }}
               contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', padding: '4px 8px', fontSize: '12px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
             />
-            <Line 
-              type="monotone" 
-              dataKey="price" 
-              stroke={isTrendingDown ? "#10b981" : isTrendingUp ? "#f43f5e" : "#64748b"} 
-              strokeWidth={2} 
-              dot={{ r: 0 }} 
-              activeDot={{ r: 4, strokeWidth: 0 }} 
+            <Line
+              type="monotone"
+              dataKey="price"
+              stroke={isTrendingDown ? "#10b981" : isTrendingUp ? "#f43f5e" : "#64748b"}
+              strokeWidth={2}
+              dot={{ r: 0 }}
+              activeDot={{ r: 4, strokeWidth: 0 }}
             />
           </LineChart>
         </ResponsiveContainer>
