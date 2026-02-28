@@ -11,6 +11,16 @@ jest.mock('resend', () => {
 import { sendPriceAlert } from '../email'
 import { Resend } from 'resend'
 
+// Tesztkörnyezetben be kell állítani a RESEND_API_KEY-t,
+// különben a getResend() env validáció dob hibát.
+const originalEnv = process.env
+beforeAll(() => {
+  process.env = { ...originalEnv, RESEND_API_KEY: 'test-api-key' }
+})
+afterAll(() => {
+  process.env = originalEnv
+})
+
 // Retrieve the underlying mock from the Resend instance
 function getMockSend() {
   const instance = new Resend()
