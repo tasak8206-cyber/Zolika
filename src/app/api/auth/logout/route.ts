@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
+import { logger } from '@/lib/logger'
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,7 +14,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Logout error:', error)
+    logger.error('logout', 'Kijelentkezési hiba', error)
     return NextResponse.json(
       { error: 'Kijelentkezési hiba!' },
       { status: 500 }

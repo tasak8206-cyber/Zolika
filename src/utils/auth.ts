@@ -1,5 +1,6 @@
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
+import { logger } from '@/lib/logger'
 
 /**
  * Lekérdezi az aktuális session-t
@@ -11,7 +12,7 @@ export async function getSession() {
     const { data: { session }, error } = await supabase.auth.getSession()
 
     if (error) {
-      console.error('Session fetch error:', error)
+      logger.error('getSession', 'Session fetch error', error)
       return null
     }
 
@@ -23,15 +24,14 @@ export async function getSession() {
     if (session.expires_at) {
       const expiresAt = new Date(session.expires_at * 1000)
       if (expiresAt < new Date()) {
-        // Session lejárt
-        console.warn('Session expired')
+        logger.warn('getSession', 'Session expired')
         return null
       }
     }
 
     return session
   } catch (error) {
-    console.error('Unexpected error in getSession:', error)
+    logger.error('getSession', 'Unexpected error', error)
     return null
   }
 }
@@ -102,7 +102,7 @@ export async function signUp(
   email: string,
   password: string,
   options?: {
-    data?: Record<string, any>
+    data?: Record<string, unknown>
   }
 ) {
   try {

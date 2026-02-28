@@ -1,6 +1,4 @@
-/**
- * AppError - Alkalmazás-specifikus hiba
- */
+import { logger } from './logger'
 export class AppError extends Error {
   constructor(
     message: string,
@@ -137,7 +135,7 @@ export function errorToResponse(error: unknown): {
 
   // Ismeretlen hiba
   const message = error instanceof Error ? error.message : 'Unknown error'
-  console.error('Unexpected error:', error)
+  logger.error('errorToResponse', 'Unexpected error', error)
 
   return {
     body: {

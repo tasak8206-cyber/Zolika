@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '@supabase/supabase-js';
+import { logger } from './logger';
 
 /**
  * Admin Supabase kliens (service role key).
@@ -40,7 +41,7 @@ export async function signUp(email: string, password: string) {
     return { success: true, user: data.user };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Ismeretlen hiba';
-    console.error('SignUp error:', err);
+    logger.error('signUp', 'SignUp error', err);
     return { success: false, error: message };
   }
 }
