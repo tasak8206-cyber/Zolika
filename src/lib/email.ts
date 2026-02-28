@@ -4,7 +4,11 @@ let resendClient: Resend | null = null
 
 function getResend() {
   if (!resendClient) {
-    resendClient = new Resend(process.env.RESEND_API_KEY)
+    const apiKey = process.env.RESEND_API_KEY
+    if (!apiKey) {
+      throw new Error('Hiányzó környezeti változó: RESEND_API_KEY')
+    }
+    resendClient = new Resend(apiKey)
   }
   return resendClient
 }

@@ -13,20 +13,46 @@ export default async function DashboardPage() {
 
   // A motor beolvassa az adatbázist a saját getProducts függvényeddel
   const products = await getProducts() || []
-  
-  // Élő Statisztikák Számolása
+
+  // Valódi statisztikák számolása
   const totalProducts = products.length
   let totalCompetitors = 0
+  let undercutCount = 0   // versenytársak akik olcsóbban árulnak
+  let dominantCount = 0   // versenytársak akiknél te vagy olcsóbb
+
+  // Legfrissebb árakat lekérdezzük a price_history-ból
+  const { data: latestPrices } = await supabase
+    .from('price_history')
+    .select('competitor_url_id, scraped_price, product_id')
+    .eq('status', 'success')
+    .order('scraped_at', { ascending: false })
+
+  // Minden versenyárnál az első (legfrissebb) rekordot tartjuk meg
+  const latestByCompetitor = new Map<string, number>()
+  for (const row of latestPrices ?? []) {
+    if (!latestByCompetitor.has(row.competitor_url_id) && row.scraped_price !== null) {
+      latestByCompetitor.set(row.competitor_url_id, row.scraped_price)
+    }
+  }
 
   products.forEach(product => {
-    // Biztosítjuk, hogy a competitor_urls egy tömb (array) legyen a számoláshoz
     const competitors = Array.isArray(product.competitor_urls) ? product.competitor_urls : []
     totalCompetitors += competitors.length
+
+    if (product.own_price) {
+      competitors.forEach((cu: { id: string }) => {
+        const competitorPrice = latestByCompetitor.get(cu.id)
+        if (competitorPrice !== undefined) {
+          if (competitorPrice < product.own_price!) undercutCount++
+          else dominantCount++
+        }
+      })
+    }
   })
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      
+
       {/* Fejléc */}
       <div className="flex justify-between items-end">
         <div>
@@ -43,7 +69,7 @@ export default async function DashboardPage() {
 
       {/* Szuperkártyák (Dinamikus adatokkal) */}
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        
+
         <Card className="border-slate-200 shadow-sm hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-semibold text-slate-600">Saját Termékek</CardTitle>
@@ -72,9 +98,9 @@ export default async function DashboardPage() {
             <div className="p-2 bg-rose-50 text-rose-600 rounded-lg"><TrendingDown className="h-4 w-4" /></div>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-black text-slate-900">{totalCompetitors > 0 ? '1' : '0'}</p>
+            <p className="text-3xl font-black text-slate-900">{undercutCount}</p>
             <p className="text-xs text-rose-600/80 mt-2 font-medium flex items-center gap-1">
-               <Bell className="w-3 h-3" /> Azonnali beavatkozást igényel
+              <Bell className="w-3 h-3" /> {undercutCount > 0 ? 'Azonnali beavatkozást igényel' : 'Minden termék versenyképes'}
             </p>
           </CardContent>
         </Card>
@@ -85,7 +111,7 @@ export default async function DashboardPage() {
             <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg"><TrendingUp className="h-4 w-4" /></div>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-black text-slate-900">{totalCompetitors > 0 ? (totalCompetitors - 1) : '0'}</p>
+            <p className="text-3xl font-black text-slate-900">{dominantCount}</p>
             <p className="text-xs text-emerald-600/80 mt-2 font-medium">Te vagy a legolcsóbb a piacon</p>
           </CardContent>
         </Card>
@@ -101,8 +127,8 @@ export default async function DashboardPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="p-6 flex justify-center">
-          <Link 
-            href="/dashboard/products" 
+          <Link
+            href="/dashboard/products"
             className="inline-flex items-center justify-center rounded-lg text-sm font-medium transition-colors bg-slate-900 text-white hover:bg-slate-800 h-10 px-8 py-2"
           >
             Irány a Termékek és Árak kezelése →

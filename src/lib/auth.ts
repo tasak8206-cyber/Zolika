@@ -2,22 +2,30 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-// ✅ NE CACHE-LD! FRISS CLIENT MINDEN REQUESTNÉL!
-function getSupabaseServerClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+/**
+ * Admin Supabase kliens (service role key).
+ * Csak szerver-oldali, privilegizált műveletekhez használható.
+ * Session kezelés: middleware.ts + @/lib/supabase/middleware
+ * Bejelentkezés/kijelentkezés: /api/auth/login és /api/auth/logout route-ok
+ */
+function getSupabaseAdminClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!supabaseUrl || !supabaseServiceKey) {
-    throw new Error('Missing Supabase environment variables');
+    throw new Error('Hiányzó Supabase környezeti változók: NEXT_PUBLIC_SUPABASE_URL vagy SUPABASE_SERVICE_ROLE_KEY');
   }
 
   return createClient(supabaseUrl, supabaseServiceKey);
 }
 
+/**
+ * Új felhasználó létrehozása admin jogosultsággal.
+ * Az email megerősítést automatikusan jóváhagyja.
+ */
 export async function signUp(email: string, password: string) {
   try {
-    // ✅ FRISS CLIENT - NEM CACHED!
-    const supabase = getSupabaseServerClient();
+    const supabase = getSupabaseAdminClient();
 
     const { data, error } = await supabase.auth.admin.createUser({
       email,
@@ -30,51 +38,20 @@ export async function signUp(email: string, password: string) {
     }
 
     return { success: true, user: data.user };
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Ismeretlen hiba';
     console.error('SignUp error:', err);
-    return { success: false, error: err.message };
+    return { success: false, error: message };
   }
 }
 
-export async function signIn(email: string, password: string) {
-  try {
-    // ✅ KLIENS-OLDALI AUTH HELPER
-    // Ez a login oldalon hívódik majd
-    return { success: true, email };
-  } catch (err: any) {
-    console.error('SignIn error:', err);
-    return { success: false, error: err.message };
-  }
-}
-
-export async function signOut() {
-  try {
-    // ✅ KLIENS-OLDALI LOGOUT
-    return { success: true };
-  } catch (err: any) {
-    console.error('SignOut error:', err);
-    return { success: false, error: err.message };
-  }
-}
-
-export async function getSession() {
-  try {
-    // ✅ SERVER-OLDALI SESSION CHECK
-    const supabase = getSupabaseServerClient();
-    
-    // Ez nem működik anon key-vel - majd middleware-ben fogjuk kezelni
-    return null;
-  } catch (err: any) {
-    console.error('GetSession error:', err);
-    return null;
-  }
-}
-
+/**
+ * Felhasználó létezésének ellenőrzése az adatbázisban.
+ */
 export async function verifyUser(email: string) {
   try {
-    // ✅ SERVER-OLDALI USER VERIFY
-    const supabase = getSupabaseServerClient();
-    
+    const supabase = getSupabaseAdminClient();
+
     const { data, error } = await supabase
       .from('users')
       .select('*')
@@ -86,7 +63,7 @@ export async function verifyUser(email: string) {
     }
 
     return { exists: true, user: data };
-  } catch (err: any) {
+  } catch {
     return { exists: false };
   }
 }
