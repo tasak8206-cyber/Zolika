@@ -12,10 +12,10 @@ export async function addCompetitorUrl(formData: FormData) {
   const { error } = await supabase
     .from('competitor_urls')
     .insert({
-      user_id:         user.id,
-      product_id:      formData.get('product_id') as string,
+      user_id: user.id,
+      product_id: formData.get('product_id') as string,
       competitor_name: formData.get('competitor_name') as string,
-      url:             formData.get('url') as string,
+      url: formData.get('url') as string,
     })
 
   if (error) throw new Error(error.message)
@@ -25,10 +25,14 @@ export async function addCompetitorUrl(formData: FormData) {
 export async function deleteCompetitorUrl(urlId: string) {
   const supabase = await createClient()
 
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Unauthorized')
+
   const { error } = await supabase
     .from('competitor_urls')
     .delete()
     .eq('id', urlId)
+    .eq('user_id', user.id)
 
   if (error) throw new Error(error.message)
   revalidatePath('/dashboard/products')
