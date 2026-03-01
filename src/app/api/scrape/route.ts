@@ -43,10 +43,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const supabase = createAdminClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+  if (!supabaseUrl || !supabaseServiceKey) {
+    return NextResponse.json(
+      { error: 'Hiányzó szerver konfiguráció (Supabase env változók)' },
+      { status: 500 }
+    )
+  }
+
+  const supabase = createAdminClient(supabaseUrl, supabaseServiceKey)
 
   const { data: urls, error } = await supabase
     .from('competitor_urls')

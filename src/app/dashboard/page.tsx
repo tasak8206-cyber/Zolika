@@ -26,6 +26,7 @@ export default async function DashboardPage() {
     .select('competitor_url_id, scraped_price, product_id')
     .eq('status', 'success')
     .order('scraped_at', { ascending: false })
+    .limit(500)
 
   // Minden versenyárnál az első (legfrissebb) rekordot tartjuk meg
   const latestByCompetitor = new Map<string, number>()

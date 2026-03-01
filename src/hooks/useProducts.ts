@@ -3,12 +3,23 @@
 import { useCallback, useState } from 'react'
 import { ProductFormData, ProductUpdateData } from '@/lib/schemas'
 
+export interface CompetitorUrl {
+  id: string
+  competitor_name: string
+  url: string
+  last_status: string | null
+  last_scraped_at: string | null
+}
+
 export interface Product {
   id: string
   user_id: string
   name: string
-  own_url: string
-  competitor_urls: string[]
+  sku: string | null
+  own_price: number | null
+  currency: 'HUF' | 'USD' | 'EUR' | 'GBP' | 'CAD' | 'AUD'
+  category: string | null
+  competitor_urls: CompetitorUrl[]
   created_at: string
   updated_at: string
 }
@@ -22,14 +33,14 @@ export function useProducts() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // CSRF token lekérése
+  // CSRF token lekérése a dedikált /api/csrf végpontról
   const getCSRFToken = useCallback(async () => {
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'GET',
-      })
-      const { data } = await response.json()
-      return data.csrfToken
+      const response = await fetch('/api/csrf', { method: 'GET' })
+      if (!response.ok) throw new Error('CSRF token fetch failed')
+      const { csrfToken } = await response.json()
+      if (!csrfToken) throw new Error('CSRF token hiányzik a válaszból')
+      return csrfToken as string
     } catch (err) {
       throw new Error('CSRF token fetch failed')
     }
